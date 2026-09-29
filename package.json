@@ -1,0 +1,9 @@
+{
+  "name": "todofuken-drill",
+  "private": true,
+  "type": "module",
+  "description": "都道府県・地方・県庁所在地を地図で覚えるドリル（ドパドリルの非公式改造版）。依存パッケージなし、public/ をそのまま配信する",
+  "scripts": {
+    "test": "node --test tests/"
+  }
+}

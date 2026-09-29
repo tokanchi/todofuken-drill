@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#3b6bff">
+  <meta name="description" content="都道府県・地方・県庁所在地を、地図をタップしながら覚えるドリル。ドパドリルの非公式改造版。">
+  <title>社会 都道府県｜ドパドリル 非公式改造版</title>
+  <link rel="icon" href="../sansu/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../sansu/style.css">
+  <link rel="stylesheet" href="shakai.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body class="lv0">
+  <div id="paper" aria-hidden="true"></div>
+  <div id="rays-fallback" aria-hidden="true"></div>
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <canvas id="fx-back" aria-hidden="true"></canvas>
+
+  <main id="app">
+    <!-- タイトル -->
+    <section id="screen-title" class="screen is-active" aria-labelledby="sk-logo">
+      <header class="sk-top">
+        <a class="icon-btn sk-back" href="../" aria-label="教科を えらぶ">‹</a>
+        <span class="sk-unofficial">ドパドリル 非公式改造版</span>
+        <button type="button" class="icon-btn sk-gear" id="open-settings" aria-label="せってい" aria-haspopup="dialog">
+          <svg viewBox="-16 -16 32 32" aria-hidden="true"><circle r="10.6" fill="none" stroke="#1b1d4d" stroke-width="9" stroke-dasharray="4.2 4.12"/><circle r="10.6" fill="#ffd23f" stroke="#1b1d4d" stroke-width="2.4"/><circle r="4.4" fill="#fff" stroke="#1b1d4d" stroke-width="2.4"/></svg>
+        </button>
+      </header>
+      <h1 class="sk-logo" id="sk-logo"><span class="sk-logo-sub">社会</span><span class="sk-logo-main"><ruby>都道府県<rt>とどうふけん</rt></ruby></span></h1>
+      <div class="title-stage sk-title-stage" id="title-stage" aria-hidden="true"></div>
+
+      <div class="sk-modes" id="modes" role="group" aria-label="遊び方">
+        <button type="button" class="sk-mode" data-mode="find"><b>どこかな？</b><small>県の 場所を 地図で さがす</small></button>
+        <button type="button" class="sk-mode" data-mode="name"><b>何県？</b><small>光った 県の 名前を えらぶ</small></button>
+        <button type="button" class="sk-mode" data-mode="region"><b>何地方？</b><small>8つの 地方から えらぶ</small></button>
+        <button type="button" class="sk-mode" data-mode="capital"><b><ruby>県庁所在地<rt>けんちょうしょざいち</rt></ruby></b><small>4つの 中から えらぶ</small></button>
+        <button type="button" class="sk-mode" data-mode="capitalFind"><b><ruby>所在地<rt>しょざいち</rt></ruby>から さがす</b><small>市の 名前を 見て、県を 地図で さがす</small></button>
+        <button type="button" class="sk-mode" data-mode="capitalType"><b>文字で 答える</b><small>市の 名前を 自分で 書く</small></button>
+      </div>
+
+      <section class="sk-panel" aria-labelledby="range-title">
+        <h2 id="range-title">どこを やる？</h2>
+        <div class="sk-chips" id="ranges" role="radiogroup" aria-labelledby="range-title">
+          <button type="button" role="radio" data-range="all">全国</button>
+          <button type="button" role="radio" data-range="hokkaido-tohoku">北海道・東北</button>
+          <button type="button" role="radio" data-range="kanto"><ruby>関東<rt>かんとう</rt></ruby></button>
+          <button type="button" role="radio" data-range="chubu">中部</button>
+          <button type="button" role="radio" data-range="kinki"><ruby>近畿<rt>きんき</rt></ruby></button>
+          <button type="button" role="radio" data-range="chugoku-shikoku">中国・四国</button>
+          <button type="button" role="radio" data-range="kyushu">九州・<ruby>沖縄<rt>おきなわ</rt></ruby></button>
+        </div>
+        <h2 id="count-title">何問？</h2>
+        <div class="sk-chips" id="counts" role="radiogroup" aria-labelledby="count-title">
+          <button type="button" role="radio" data-count="10">10問</button>
+          <button type="button" role="radio" data-count="20">20問</button>
+          <button type="button" role="radio" data-count="all">全部</button>
+        </div>
+      </section>
+
+      <button type="button" class="big-btn sk-study-btn" id="open-study">地図で おぼえる</button>
+
+      <section class="sk-panel sk-progress" aria-labelledby="progress-title">
+        <h2 id="progress-title">おぼえた 県 <b id="learned">0</b>/47</h2>
+        <div class="sk-mini-map" id="mini-map"></div>
+        <p class="sk-note" id="progress-note"></p>
+        <p class="sk-legend"><span><i class="lv0"></i>まだ</span><span><i class="lv1"></i>がんばり中</span><span><i class="lv2"></i>おぼえた</span><span><i class="lv3"></i>ばっちり</span></p>
+      </section>
+      <p class="sk-credit">元の ゲーム：<a href="https://github.com/grmchn/dopa-drill" target="_blank" rel="noopener">ドパドリル</a>（gear_machine さん）の非公式改造版です。地図は <a href="https://github.com/geolonia/japanese-prefectures" target="_blank" rel="noopener">Geolonia</a> の 日本地図（GFDL）を 元に しています。<a href="../#license">ライセンス</a></p>
+    </section>
+
+    <!-- プレイ -->
+    <section id="screen-play" class="screen" aria-label="プレイ画面">
+      <header class="hud">
+        <button type="button" class="icon-btn sk-quit" id="quit" aria-label="やめる">×</button>
+        <div class="pips" id="pips" aria-hidden="true"></div>
+        <div class="clock" aria-live="off"><span id="clock-label">目標 2:00</span><b id="clock">0:00</b></div>
+        <button type="button" class="icon-btn" id="mute" aria-label="音を消す">♪</button>
+      </header>
+      <div class="hud2">
+        <div class="tally"><span>正解 <b id="ok">0</b><small id="ok-total">/10</small></span><span class="ng">おしい <b id="ng">0</b></span></div>
+        <div class="combo" id="combo-box" aria-hidden="true"><b id="combo">0</b><small>コンボ</small><span class="combo-mult" id="combo-mult"></span></div>
+        <div class="dopa" id="dopa-box"><small>ドパ</small><b id="dopa">0</b></div>
+      </div>
+      <div class="stage sk-stage" id="stage" aria-hidden="true">
+        <svg class="bunting" viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 4 Q200 34 400 4" fill="none" stroke="#1b1d4d" stroke-width="2.5"/></svg>
+        <div class="spot spot-l"></div><div class="spot spot-r"></div>
+        <svg class="ground" viewBox="0 0 400 20" preserveAspectRatio="none"><path d="M4 12 Q60 6 120 11 T240 10 T396 12" fill="none" stroke="#1b1d4d" stroke-width="3" stroke-linecap="round"/></svg>
+      </div>
+      <section class="card sk-card" id="card" aria-labelledby="qtitle">
+        <div class="card-top"><span class="chip" id="qtitle">県の 場所</span><span class="qno" id="qno">第1問</span></div>
+        <div class="sk-body">
+          <div class="sk-ask">
+            <p class="sk-prompt" id="prompt" aria-live="polite"></p>
+            <button type="button" class="sk-speak-q" id="speak" aria-label="問題を 読み上げる">🔊</button>
+          </div>
+          <form class="sk-type" id="type-form" autocomplete="off" hidden>
+            <input class="sk-type-input" id="type-input" type="text" lang="ja" enterkeyhint="go" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="ひらがな でも 漢字 でも OK" aria-label="県庁所在地を 書く">
+            <button type="submit" class="sk-type-go">答える</button>
+            <button type="button" class="sk-type-reveal" id="type-reveal">分からない</button>
+          </form>
+          <div class="sk-map" id="play-map"></div>
+          <div class="sk-choices" id="choices"></div>
+        </div>
+        <p class="step-label sk-step" id="step-label" aria-live="polite">&nbsp;</p>
+      </section>
+    </section>
+
+    <!-- 結果 -->
+    <section id="screen-result" class="screen" aria-labelledby="result-title">
+      <div class="result-card">
+        <p class="chip" id="result-title">クリア</p>
+        <p class="score"><b id="r-score">100</b><span>点</span></p>
+        <dl class="stats">
+          <div><dt>正解</dt><dd id="r-ok">10問</dd></div>
+          <div><dt>おしい</dt><dd id="r-ng">0回</dd></div>
+          <div><dt>一発正解</dt><dd id="r-rate">100%</dd></div>
+          <div><dt>タイム</dt><dd id="r-time">1:23</dd></div>
+        </dl>
+        <p class="dopa-final"><small>ドパ</small><b id="r-dopa">0</b></p>
+        <div class="sk-wrong" id="r-wrong"></div>
+        <div class="actions">
+          <button type="button" id="go-retry" class="big-btn sk-retry">まちがえた 県を もう一度</button>
+          <button type="button" id="go-again" class="sub-btn">もう一度</button>
+          <button type="button" id="go-title" class="sub-btn">終わる</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 地図で おぼえる -->
+    <section id="screen-study" class="screen" aria-labelledby="study-title">
+      <header class="sk-top">
+        <button type="button" class="icon-btn sk-back" id="study-back" aria-label="もどる">‹</button>
+        <h2 id="study-title" class="sk-study-title">地図で おぼえる</h2>
+        <span class="sk-top-space"></span>
+      </header>
+      <div class="sk-study-tools" role="group" aria-label="ひょうじ">
+        <button type="button" class="sk-toggle" id="study-labels" aria-pressed="true">名前</button>
+        <button type="button" class="sk-toggle" id="study-colors" aria-pressed="true">地方の 色</button>
+      </div>
+      <div class="sk-map sk-study-map" id="study-map"></div>
+      <div class="sk-study-bottom">
+        <div class="sk-study-stage" id="study-stage" aria-hidden="true"></div>
+        <div class="sk-study-info" id="study-info" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 設定 -->
+  <div class="modal" id="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+    <div class="modal-card">
+      <h2 id="settings-title" class="chip">せってい</h2>
+      <div class="set-row">
+        <span class="set-label">音</span>
+        <div class="set-inline">
+          <button type="button" class="toggle" data-toggle="sound" aria-pressed="true"><i aria-hidden="true">♪</i><b>オン</b></button>
+          <input type="range" class="slider" id="volume" min="0" max="100" step="1" value="80" aria-label="音の大きさ">
+        </div>
+      </div>
+      <div class="set-row">
+        <span class="set-label">ふりがな</span>
+        <button type="button" class="toggle" data-toggle="furigana" aria-pressed="true"><i aria-hidden="true">あ</i><b>オン</b></button>
+      </div>
+      <div class="set-row">
+        <span class="set-label">動きの強さ <b id="motion-val">100%</b></span>
+        <input type="range" class="slider motion" id="motion" min="0" max="100" step="1" value="100" aria-label="動きの強さ">
+        <p class="set-note">0%で揺れ・光・紙吹雪・移動を止めます</p>
+      </div>
+      <div class="set-row">
+        <button type="button" class="sub-btn sk-reset" id="reset-records">きろくを 消す</button>
+        <p class="set-note">社会の きろく（おぼえた 県）だけを 消します。きろくは この たんまつの 中だけに あります。</p>
+      </div>
+      <button type="button" class="big-btn" id="close-settings">とじる</button>
+    </div>
+  </div>
+
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <svg id="actors" aria-hidden="true"><g id="actors-back"></g><g id="actors-front"></g></svg>
+  <div id="cutins" aria-hidden="true"></div>
+  <div id="flash" aria-hidden="true"></div>
+  <noscript>このドリルで 遊ぶには JavaScript が ひつようです。</noscript>
+</body>
+</html>
